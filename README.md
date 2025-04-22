@@ -11,7 +11,6 @@ The button module allows users to easily arm or disarm the system with a simple 
 In addition to its primary purpose of enhancing home security, this system provides an opportunity to explore basic sensor integration and automation. It is an ideal project for individuals looking to learn about IoT, sensor-based systems, and Raspberry Pi programming while creating something practical and useful for everyday life.
 
 # List
-# List
 
 | Name            | Picture                                                                                               | Wiring                                                                 |
 |-----------------|-------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------|
