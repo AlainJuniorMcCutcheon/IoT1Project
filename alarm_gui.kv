@@ -1,0 +1,111 @@
+<AlarmSystem>:
+    orientation: 'vertical'
+    padding: 20
+    spacing: 20
+
+    BoxLayout:
+        size_hint_y: None
+        height: '40dp'
+        spacing: 10
+
+        Label:
+            id: title_label
+            text: root.get_translation('title')
+            font_size: '20sp'
+            bold: True
+            halign: 'center'
+
+        Spinner:
+            text: 'English' if root.language == 'en' else 'Français'
+            values: ['English', 'Français']
+            size_hint: None, None
+            size: '120dp', '30dp'
+            on_text:
+                root.language = 'en' if self.text == 'English' else 'fr'
+                root.update_language()
+
+    BoxLayout:
+        size_hint_y: None
+        height: '40dp'
+        Label:
+            id: status_label
+            text: root.get_translation(root.system_status.lower())
+            color: (1, 0, 0, 1) if root.system_status == "TRIGGERED" else (0, 1, 0, 1)
+            font_size: '18sp'
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: '100dp'
+        spacing: 30
+
+        Widget:
+
+        Button:
+            id: alarm_button
+            text: root.get_translation('hold_to_disable')
+            size_hint: 2.0, None
+            size: '150dp', '50dp'
+            on_press: root.on_alarm_button_down()
+            on_release: root.on_alarm_button_up()
+
+        Widget:
+
+        Widget:
+            size_hint: None, None
+            size: '40dp', '40dp'
+            canvas.before:
+                Color:
+                    rgba: root.led_color
+                Ellipse:
+                    pos: self.pos
+                    size: self.size
+
+        Widget:
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: '30dp'
+        spacing: 20
+
+        Label:
+            id: buzzer_label_title
+            text: root.get_translation('buzzer')
+            size_hint_x: None
+            width: '80dp'
+        Label:
+            id: buzzer_label
+            text: root.buzzer_status
+            color: (1, 0, 0, 1) if root.buzzer_status == 'ON' else (0.5, 0.5, 0.5, 1)
+
+        Label:
+            id: motion_label_title
+            text: root.get_translation('motion')
+            size_hint_x: None
+            width: '80dp'
+        Label:
+            id: motion_label
+            text: root.motion_status
+            color: (1, 0, 0, 1) if root.motion_status == 'Yes' else (0.5, 0.5, 0.5, 1)
+
+    Label:
+        id: log_title
+        text: root.get_translation('alarm_log')
+        size_hint_y: None
+        height: '30dp'
+        font_size: '16sp'
+        bold: True
+
+    ScrollView:
+        size_hint_y: 1
+        do_scroll_x: False
+
+        Label:
+            id: log_label
+            text: root.log_text
+            size_hint_y: None
+            height: self.texture_size[1]
+            text_size: self.width, None
+            valign: 'top'
+            halign: 'left'
