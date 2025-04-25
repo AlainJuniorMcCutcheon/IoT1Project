@@ -22,5 +22,6 @@ In addition to its primary purpose of enhancing home security, this system provi
 # GPIO Wiring
 ![image](https://github.com/user-attachments/assets/963cb4b9-d79b-4993-9c85-9dd6813f2666)
 
-** Slight Correction for Wiring **
-Yellow wire goes to the designated GPIO slot.
+# Slight Correction for Wiring
+
+The yellow wire for the LED goes to the designated GPIO slot.
