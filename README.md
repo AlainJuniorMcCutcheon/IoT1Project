@@ -14,7 +14,7 @@ In addition to its primary purpose of enhancing home security, this system provi
 
 | Name            | Picture                                                                                               | Wiring                                                                 |
 |-----------------|-------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------|
-| PIR Sensor Module | ![image](https://github.com/user-attachments/assets/695fae26-0fac-402d-9f3b-8966f2cb2cb9) | VCC → 5V<br>GND → GND<br>OUT → GPIO6                                  |
+| PIR Sensor Module | ![image](https://github.com/user-attachments/assets/695fae26-0fac-402d-9f3b-8966f2cb2cb9) | VCC → 3.3V<br>GND → GND<br>OUT → GPIO6                                  |
 | Button Module     | ![image](https://github.com/user-attachments/assets/9d1e5dfd-78dc-4904-9307-bc4751ba5fbb) | VCC → 3.3V <br>GND → GND<br>OUT → GPIO17                          |
 | LED Module        | ![image](https://github.com/user-attachments/assets/3746c211-2c57-430b-b2c1-a0977adb7f35) | VCC → 3.3V<br>GND → GND<br>Signal → GPIO23                       |
 | Passive Buzzer    | ![image](https://github.com/user-attachments/assets/5d8dd3fa-708a-4c24-80f5-501c47bfd825) | VCC → 3.3V <br>GND → GND<br>Signal → GPIO25                      |
