@@ -5,6 +5,11 @@ from kivy.clock import Clock
 from kivy.lang import Builder
 from datetime import datetime
 import time
+import json
+import uuid
+
+from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
+import config
 
 Builder.load_file('alarm_gui.kv')
 
@@ -51,11 +56,54 @@ class AlarmSystem(BoxLayout):
     led_flash_event = None
     log_text = StringProperty("")
     language = StringProperty('en')
+    mqtt_client = None
+    is_connected = False
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        # Auto-arm countdown
         self.auto_arm_event = Clock.schedule_interval(self.auto_arm_countdown, 1)
-        self.led_flash_event = None
+
+        # MQTT Client Setup
+        self.setup_mqtt()
+
+        # Schedule telemetry every 5 seconds
+        Clock.schedule_interval(self.send_sample_telemetry, 5)
+
+    def setup_mqtt(self):
+        try:
+            client_id = str(uuid.uuid4())
+            self.mqtt_client = AWSIoTMQTTClient(client_id)
+            self.mqtt_client.configureEndpoint(config.AWS_HOST, config.AWS_PORT)
+            self.mqtt_client.configureCredentials(config.AWS_ROOT_CA, config.AWS_PRIVATE_KEY, config.AWS_CLIENT_CERT)
+            self.mqtt_client.configureConnectDisconnectTimeout(config.CONN_DISCONN_TIMEOUT)
+            self.mqtt_client.configureMQTTOperationTimeout(config.MQTT_OPER_TIMEOUT)
+
+            if self.mqtt_client.connect():
+                self.is_connected = True
+                print("MQTT Connected ✅")
+        except Exception as e:
+            print("MQTT connection failed ❌:", e)
+
+    def send_sample_telemetry(self, dt):
+        if not self.is_connected:
+            print("MQTT not connected, skipping telemetry")
+            return
+
+        telemetry = {
+            'sample_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'device_id': config.CLIENT_ID,
+            'system_status': self.system_status,
+            'buzzer_status': self.buzzer_status,
+            'motion_status': self.motion_status
+        }
+
+        try:
+            self.mqtt_client.publish(config.TOPIC, json.dumps(telemetry), 1)
+            print("📡 Published:", telemetry)
+        except Exception as e:
+            print("Failed to publish telemetry:", e)
 
     def get_translation(self, key):
         return translations[self.language].get(key, key)
@@ -68,8 +116,6 @@ class AlarmSystem(BoxLayout):
         self.ids.buzzer_label_title.text = t['buzzer']
         self.ids.motion_label_title.text = t['motion']
         self.ids.log_title.text = t['alarm_log']
-
-        # Update all dynamic text (like Yes/No for motion and buzzer)
         self.ids.buzzer_label.text = t['Yes'] if self.buzzer_status == 'ON' else t['No']
         self.ids.motion_label.text = t['Yes'] if self.motion_status == 'Yes' else t['No']
 
