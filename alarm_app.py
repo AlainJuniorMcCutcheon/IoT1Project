@@ -7,6 +7,8 @@ from datetime import datetime
 import time
 import json
 import uuid
+from gpiozero import MotionSensor, Button, Buzzer, LED
+from threading import Thread
 
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import config
@@ -44,6 +46,12 @@ translations = {
     }
 }
 
+# Hardware pin setup
+pir = MotionSensor(6)
+button = Button(17)
+buzzer = Buzzer(25)
+led = LED(23)
+
 class AlarmSystem(BoxLayout):
     system_status = 'DISARMED'
     buzzer_status = 'OFF'
@@ -61,15 +69,12 @@ class AlarmSystem(BoxLayout):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
-        # Auto-arm countdown
         self.auto_arm_event = Clock.schedule_interval(self.auto_arm_countdown, 1)
-
-        # MQTT Client Setup
         self.setup_mqtt()
-
-        # Schedule telemetry every 5 seconds
         Clock.schedule_interval(self.send_sample_telemetry, 5)
+
+        # Start GPIO monitoring in background thread
+        Thread(target=self.monitor_sensors, daemon=True).start()
 
     def setup_mqtt(self):
         try:
@@ -92,11 +97,14 @@ class AlarmSystem(BoxLayout):
             return
 
         telemetry = {
+            'timestamp': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
             'sample_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'device_id': config.CLIENT_ID,
-            'system_status': self.system_status,
-            'buzzer_status': self.buzzer_status,
-            'motion_status': self.motion_status
+            'device_data': {
+                'system_status': self.system_status,
+                'buzzer_status': self.buzzer_status,
+                'motion_status': self.motion_status,
+            }
         }
 
         try:
@@ -139,11 +147,15 @@ class AlarmSystem(BoxLayout):
         self.arm_button_held = False
 
     def trigger_alarm(self):
+        if self.system_status != 'ARMED':
+            return
         self.system_status = 'TRIGGERED'
         self.ids.status_label.text = self.get_translation('triggered')
         self.buzzer_status = 'ON'
         self.motion_status = 'Yes'
         self.led_blinking = True
+        buzzer.on()
+        led.on()
         self.update_log()
 
         if self.led_flash_event is None:
@@ -161,6 +173,8 @@ class AlarmSystem(BoxLayout):
         self.led_color = (0.5, 0.5, 0.5, 1)
         self.buzzer_status = 'OFF'
         self.motion_status = 'No'
+        buzzer.off()
+        led.off()
         self.update_log()
 
         if self.led_flash_event:
@@ -168,7 +182,6 @@ class AlarmSystem(BoxLayout):
             self.led_flash_event = None
 
         self.auto_arm_event = Clock.schedule_interval(self.auto_arm_countdown, 1)
-
         self.update_gui()
 
     def update_log(self):
@@ -187,8 +200,16 @@ class AlarmSystem(BoxLayout):
             self.led_color = [0.5, 0.5, 0.5, 1]
 
     def update_gui(self):
-        self.ids.buzzer_label.text = self.buzzer_status
-        self.ids.motion_label.text = self.motion_status
+        t = translations[self.language]
+        self.ids.buzzer_label.text = t['Yes'] if self.buzzer_status == 'ON' else t['No']
+        self.ids.motion_label.text = t['Yes'] if self.motion_status == 'Yes' else t['No']
+
+    def monitor_sensors(self):
+        while True:
+            if pir.motion_detected or button.is_pressed:
+                print("Sensor triggered!")
+                self.trigger_alarm()
+            time.sleep(0.1)
 
 
 class AlarmApp(App):
