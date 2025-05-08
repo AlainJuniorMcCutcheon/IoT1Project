@@ -195,9 +195,15 @@ class AlarmSystem(BoxLayout):
 
     def blink_led(self, dt):
         if self.led_blinking:
-            self.led_color = [1, 0, 0, 1] if self.led_color == [1, 1, 1, 1] else [1, 1, 1, 1]
+            if self.led_color == [1, 1, 1, 1]:
+                self.led_color = [1, 0, 0, 1]
+                led.off()  # Physical LED off
+            else:
+                self.led_color = [1, 1, 1, 1]
+                led.on()   # Physical LED on
         else:
             self.led_color = [0.5, 0.5, 0.5, 1]
+            led.off()  # Make sure LED is off if not blinking
 
     def update_gui(self):
         t = translations[self.language]
@@ -205,10 +211,23 @@ class AlarmSystem(BoxLayout):
         self.ids.motion_label.text = t['Yes'] if self.motion_status == 'Yes' else t['No']
 
     def monitor_sensors(self):
+        button_pressed_time = None
+
         while True:
-            if pir.motion_detected or button.is_pressed:
-                print("Sensor triggered!")
+            if pir.motion_detected and self.system_status == 'ARMED':
+                print("Motion detected!")
                 self.trigger_alarm()
+
+            if button.is_pressed:
+                if button_pressed_time is None:
+                    button_pressed_time = time.time()
+                elif time.time() - button_pressed_time >= 3:
+                    print("Button held for 3 seconds")
+                    self.deactivate_alarm()
+                    button_pressed_time = None  # Prevent repeated deactivations
+            else:
+                button_pressed_time = None  # Reset if released too early
+
             time.sleep(0.1)
 
 
