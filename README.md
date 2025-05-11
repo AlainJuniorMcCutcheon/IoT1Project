@@ -21,6 +21,8 @@ Once disarmed, the screen will show “System Disarmed” and, after a short 5-s
 
 For ease of use, the interface is fully translated in both English and French, making it accessible to a wider range of users.
 
+If available, you may also use a touch screen device to operate the application.
+
 # List
 
 | Name            | Picture                                                                                               | Wiring                                                                 |
